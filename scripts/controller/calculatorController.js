@@ -35,7 +35,8 @@ class CalculatorController{
     initKeyboard(){
 
         document.addEventListener('keyup', e =>{
-            let keysAllowed = ['Escape','Backspace','+','-','/','*','%','Enter','=','.',',','1','2','3','4','5','6','7','8','9','c'];
+            this.playAudio();
+            let keysAllowed = ['Escape','Backspace','+','-','/','*','%','Enter','=','.',',','1','2','3','4','5','6','7','8','9','c','R','r','q','Q'];
 
             keysAllowed.forEach( key =>{
                 if(key == e.key){
@@ -65,7 +66,18 @@ class CalculatorController{
                 case ',': 
                     this.addDot();
                     break;
-    
+                case 'q':
+                case 'Q':
+                    this.elevatedSquare();
+                    break;
+                case 'R':
+                case 'r':
+                    this.divisionByOne();
+                    break;
+                case '@':
+                    this.sqrt();
+                    break;
+
                 case '0':
                 case '1':    
                 case '2':  
@@ -152,14 +164,13 @@ class CalculatorController{
             case '±': 
                 this.changeSignal();
                 break;
-
             case '+': 
                 this.addOperation('+');
                 break;
             case '-': 
                 this.addOperation('-');
                 break;
-            case '÷': 
+            case '/': 
                 this.addOperation('/');
                 break;
             case '*': 
@@ -168,15 +179,21 @@ class CalculatorController{
             case '%': 
                 this.addOperation('%');
                 break;
-
+            case '¹/x':
+                this.divisionByOne();
+                break;
+            case 'x²':
+                this.elevatedSquare();
+                break;
+            case '√':
+                this.sqrt();
+                break;
             case '=': 
                 this.calculate();
                 break;
             case ',': 
                 this.addDot();
                 break;
-
-
             case '0':
             case '1':    
             case '2':  
@@ -189,7 +206,6 @@ class CalculatorController{
             case '9':
                 this.addOperation(parseInt(value));
                 break;
-
             default:
                 this.setError();
                 break;
@@ -197,7 +213,6 @@ class CalculatorController{
     }
 
     addOperation(value){
-
         if(isNaN(this.getLastOperation())){
 
             if(this.isOperator(value)){
@@ -208,7 +223,6 @@ class CalculatorController{
             }
             
         }else{
-
             if(this.isOperator(value)){
                 this.pushOperation(value);
             }else {
@@ -216,46 +230,52 @@ class CalculatorController{
                 this.setLastOperation(newValue);
                 this.setLastNumberToDisplay();
             }
-
         }
-
+        // console.log(this._operation);
         // Update history.
         this.updateHistory();
     }
 
     calculate(){
-        // last = última operação digitada. 
         let last = '';
         this._lastOperator = this.getLastItem(true);
 
-        if(this._operation.length < 3){
-            let firstItem = this._operation[0];
-            this._operation = [firstItem, this._lastOperator, this._lastNumber];
-        }
-
-        if(this._operation.length > 3){
-            last = this._operation.pop();
-
-            this._lastNumber = this.getResult();
-        }else if(this._operation.length == 3){
-            this._lastNumber = this.getLastItem(false);
-        }
-
-        let result = this.getResult();
-
-        // Update history
-        this.updateHistory();
-
-        // calculate '%' 
-        if(last == '%'){
-            let percentage = this._operation[0] * (this._operation[2] / 100);
-            this._operation = [this._operation[0], this._operation[1], percentage];
+        // condition for in case he type = in the first event
+        if(this._lastOperator){
+            if(this._operation.length < 3 && this._lastOperator){
+                let firstItem = this._operation[0];
+                this._operation = [firstItem, this._lastOperator, this._lastNumber];
+            }
+    
+            if(this._operation.length > 3){
+                last = this._operation.pop();
+    
+                this._lastNumber = this.getResult();
+            }else if(this._operation.length == 3){
+                this._lastNumber = this.getLastItem(false);
+            }
+    
+            let result = this.getResult();
+    
+            // Update history
+            this.updateHistory();
+    
+            // calculate '%' percentage
+            if(last == '%'){
+                let percentage = this._operation[0] * (this._operation[2] / 100);
+                this._operation = [this._operation[0], this._operation[1], percentage];
+            }else if(last != '%'){
+                this._operation = [result];
+                if(last) this._operation.push(last);
+            }
+            
+            this.setLastNumberToDisplay();
         }else{
-            this._operation = [result];
-            if(last) this._operation.push(last);
+            this.setError();
         }
 
-        this.setLastNumberToDisplay();
+        // console.log(this._operation);
+
     }
 
     getResult(){
@@ -269,7 +289,6 @@ class CalculatorController{
     }
 
     setLastNumberToDisplay(){
-
         let lastNumber = this.getLastItem(false); 
 
         if(!lastNumber) lastNumber = 0;
@@ -302,36 +321,8 @@ class CalculatorController{
         }
     }
 
-    addDot(){
-        let lastOperation = this.getLastOperation();
-
-        if(typeof lastOperation === 'string' && lastOperation.split('').indexOf('.') > -1) return;
-
-        if(this.isOperator(lastOperation) || !lastOperation){
-            this.pushOperation('0.');   
-        }else{
-            this.setLastOperation(lastOperation.toString() + '.');
-        }
-
-        this.setLastNumberToDisplay();
-
-    }
-
-    changeSignal(){
-        for(let i = this._operation.length - 1; i >= 0; i--){
-            if(!this.isOperator(this._operation[i])){
-                let number = this._operation[i] / -1;
-                this._operation[i] = number.toString();
-                break;
-            }
-        }
-
-        this.setLastNumberToDisplay();
-        console.log(this._operation);
-    }
-
     isOperator(value){
-        return (['+', '-', '*', '%', '/', 'sqr'].indexOf(value) > -1);
+        return (['+', '-', '*', '%', '/'].indexOf(value) > -1);
     }
 
     // Buttons specials
@@ -348,6 +339,52 @@ class CalculatorController{
         this._operation.pop();
         this.updateHistory();
         this.setLastNumberToDisplay();
+    }
+
+    addDot(){
+        let lastOperation = this.getLastOperation();
+
+        if(typeof lastOperation === 'string' && lastOperation.split('').indexOf('.') > -1) return;
+
+        if(this.isOperator(lastOperation) || !lastOperation){
+            this.pushOperation('0.');   
+        }else{
+            this.setLastOperation(lastOperation.toString() + '.');
+        }
+
+        this.setLastNumberToDisplay();
+
+    }
+
+    divisionByOne(){
+        let lastOperation = this.getLastOperation();
+        this.setLastOperation(1 / lastOperation);
+        this.setLastNumberToDisplay();
+    }
+
+    elevatedSquare(){
+        let lastOperation = this.getLastOperation();
+        this.setLastOperation(Math.pow(lastOperation, 2));
+        this.setLastNumberToDisplay();
+    }
+
+    sqrt(){
+        let lastOperation = this.getLastOperation();
+        this.setLastOperation(Math.sqrt(lastOperation));
+        this.setLastNumberToDisplay();
+    }
+
+    changeSignal(){
+        for(let i = this._operation.length - 1; i >= 0; i--){
+            if(!this.isOperator(this._operation[i])){
+                let number = this._operation[i] / -1;
+                this._operation[i] = number.toString();
+                break;
+            }
+        }
+
+        this.setLastNumberToDisplay();
+        console.log(this._operation);
     }
 
     // Update history

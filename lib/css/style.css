@@ -1,7 +1,6 @@
 body {
-    background: #0F2027;  /* fallback for old browsers */
-    background: -webkit-linear-gradient(to right, #2C5364, #203A43, #0F2027);  /* Chrome 10-25, Safari 5.1-6 */
-    
+    background: #232526;
+    background: -webkit-linear-gradient(to right, #232526, #414345);
 }
 .center {
     position: absolute;
@@ -13,9 +12,8 @@ body {
 #calculadora {
     border-radius: 10px;
     border-style: solid;
-    border-color: white;
     border-width: 1px;
-    box-shadow: 10px 10px 30px rgba(20,20,20,0.5);
+    box-shadow: 10px 10px 30px rgba(0,0,0,0.4);
     background-color: #B1B1B1;
     width: 322px;
     height: 520px;
@@ -23,7 +21,7 @@ body {
 }
 #calculadora .btn {
     margin: 2px;
-    border-radius: 0;
+    border-radius: 5px;
     min-height: 44px;
     outline: none;
     box-shadow: none;
@@ -64,10 +62,15 @@ header {
     padding-top: 0;
     padding-bottom: 0;
     font-weight: 600;
+
 }
 .btn-others {
     background-color: #D1D1D1;
     padding-top: 0;
     padding-bottom: 0;
     font-size: 20px;
+}
+.textSound{
+    color: white;
+    font-family: 'IBM Plex Sans';
 }
