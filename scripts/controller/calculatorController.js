@@ -35,7 +35,6 @@ class CalculatorController{
     initKeyboard(){
 
         document.addEventListener('keyup', e =>{
-            this.playAudio();
             let keysAllowed = ['Escape','Backspace','+','-','/','*','%','Enter','=','.',',','1','2','3','4','5','6','7','8','9','c','R','r','q','Q'];
 
             keysAllowed.forEach( key =>{
