@@ -13,7 +13,7 @@ class CalculatorController{
 
         // Audio
         this._audio = new Audio('lib/sound/click.wav');
-        this._audioOnOff = false;
+        this._audioOnOff = true;
 
         this.initialize();
         this.initButtonsEvents();
@@ -22,6 +22,7 @@ class CalculatorController{
 
     initialize(){
         this.setLastNumberToDisplay();
+        this.pasteFromClipboard();
 
         let btnToggleAudio = document.querySelector('#btnToggleAudio');
         btnToggleAudio.addEventListener('dblclick', e=>{ 
@@ -34,8 +35,13 @@ class CalculatorController{
     initKeyboard(){
 
         document.addEventListener('keyup', e =>{
+            let keysAllowed = ['Escape','Backspace','+','-','/','*','%','Enter','=','.',',','1','2','3','4','5','6','7','8','9','c'];
 
-            this.playAudio();
+            keysAllowed.forEach( key =>{
+                if(key == e.key){
+                    this.playAudio();
+                }
+            });
             
             switch(e.key){
                 case 'Escape': 
@@ -74,9 +80,30 @@ class CalculatorController{
                 case '9':
                     this.addOperation(parseInt(e.key));
                     break;
+                
+                case 'c': 
+                    if (e.ctrlKey) this.copyToClipboard();
+                    break;
             }
         });
 
+    }
+
+    // paste/copy from clipboard
+    pasteFromClipboard(){
+        document.addEventListener('paste', e=>{
+            let text = e.clipboardData.getData('Text');
+            this.displayCalcElement = parseFloat(text);
+        });
+    }
+
+    copyToClipboard(){
+        let input = document.createElement('input');
+        input.value = this.displayCalcElement;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("Copy");
+        input.remove();
     }
 
     // Audio keyboard
@@ -110,6 +137,12 @@ class CalculatorController{
                 break;
             case 'CE':
                 this.clearEntry();
+                break;
+            case '←': 
+                this.clearEntry();
+                break;
+            case '±': 
+                this.changeSignal();
                 break;
 
             case '+': 
@@ -289,6 +322,19 @@ class CalculatorController{
 
         this.setLastNumberToDisplay();
 
+    }
+
+    changeSignal(){
+        for(let i = this._operation.length - 1; i >= 0; i--){
+            if(!this.isOperator(this._operation[i])){
+                let number = this._operation[i] / -1;
+                this._operation[i] = number.toString();
+                break;
+            }
+        }
+
+        this.setLastNumberToDisplay();
+        console.log(this._operation);
     }
 
     isOperator(value){
