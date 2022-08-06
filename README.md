@@ -2,7 +2,7 @@
 
 # Sobre
 
-Código de um treino de fundamentos POO utilizando o Javascript, aplicando à uma réplica da calculadora do Windows 10 em HTML e CSS.
+Projeto referente a um treino pessoal de fundamentos POO utilizando o Javascript, aplicando à uma réplica da calculadora do Windows 10 em HTML e CSS.
 
 # Interface
 
