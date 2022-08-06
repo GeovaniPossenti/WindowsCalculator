@@ -54,10 +54,8 @@ class CalculatorController{
                 case '-': 
                 case '/': 
                 case '*': 
-                    this.addOperation(e.key);
-                    break;
                 case '%': 
-                    this.calculate(e.key);
+                    this.addOperation(e.key);
                     break;
                 case 'Enter': 
                 case '=': 
@@ -94,6 +92,15 @@ class CalculatorController{
         document.addEventListener('paste', e=>{
             let text = e.clipboardData.getData('Text');
             this.displayCalcElement = parseFloat(text);
+
+            let lastItem = this.getLastItem(true);
+            if(lastItem && this.isOperator(lastItem) == true){
+                this._operation[2] = parseInt(text);
+            }else{
+                this._operation[0] = parseInt(text);
+            }
+            this.playAudio();
+            this.setLastNumberToDisplay();
         });
     }
 
@@ -102,6 +109,7 @@ class CalculatorController{
         input.value = this.displayCalcElement;
         document.body.appendChild(input);
         input.select();
+        this.playAudio();
         document.execCommand("Copy");
         input.remove();
     }
@@ -160,6 +168,7 @@ class CalculatorController{
             case '%': 
                 this.addOperation('%');
                 break;
+
             case '=': 
                 this.calculate();
                 break;
@@ -192,39 +201,29 @@ class CalculatorController{
         if(isNaN(this.getLastOperation())){
 
             if(this.isOperator(value)){
-
                 this.setLastOperation(value);
-
             }else{
                 this.pushOperation(value);
-
                 this.setLastNumberToDisplay();
             }
             
         }else{
 
             if(this.isOperator(value)){
-
                 this.pushOperation(value);
-
             }else {
                 let newValue = this.getLastOperation().toString() + value.toString();
                 this.setLastOperation(newValue);
-
                 this.setLastNumberToDisplay();
             }
 
         }
 
-        console.log(this._operation);
-
         // Update history.
         this.updateHistory();
-
     }
 
     calculate(){
-        
         // last = última operação digitada. 
         let last = '';
         this._lastOperator = this.getLastItem(true);
@@ -249,17 +248,11 @@ class CalculatorController{
 
         // calculate '%' 
         if(last == '%'){
-
-            result /= 100;
-            this._operation = [result];
-
+            let percentage = this._operation[0] * (this._operation[2] / 100);
+            this._operation = [this._operation[0], this._operation[1], percentage];
         }else{
-
-            let result = eval(this._operation.join(""));
             this._operation = [result];
-
             if(last) this._operation.push(last);
-
         }
 
         this.setLastNumberToDisplay();
@@ -338,7 +331,7 @@ class CalculatorController{
     }
 
     isOperator(value){
-        return (['+', '-', '*', '%', '/'].indexOf(value) > -1);
+        return (['+', '-', '*', '%', '/', 'sqr'].indexOf(value) > -1);
     }
 
     // Buttons specials
@@ -364,13 +357,15 @@ class CalculatorController{
     }
 
     // Error 
-
     setError(){
-        this.displayCalcElement = "Entrada inválida";
+        this.displayCalcElement = "Error";
+        this.historyCalcElement = " ";
+        this._operation = [];
+        this._lastNumber = '';
+        this._lastOperator = '';
     }
 
     // Tools
-
     addEventListenerAll(element, events, callback){
         events.split(' ').forEach(event => {
             element.addEventListener(event, callback, false);
@@ -385,6 +380,10 @@ class CalculatorController{
     }
 
     set displayCalcElement(value){
+        if(value.toString().length > 11){
+            this.setError();
+            return false;
+        }
         this._displayCalcElement.innerHTML = value;
     }
 
