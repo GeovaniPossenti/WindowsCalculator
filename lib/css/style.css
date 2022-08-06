@@ -49,6 +49,15 @@ header {
     font-size: 48px;
     font-weight: 600;
 }
+#history {
+    color: rgb(97, 97, 97);
+    text-align: right;
+    position: absolute;
+    bottom: 60px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: 600;
+}
 .btn-number {
     background-color: #EFEFEF;
     font-size: 24px;
