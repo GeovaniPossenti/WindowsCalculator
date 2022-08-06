@@ -6,26 +6,98 @@ class CalculatorController{
         this._displayCalcElement = document.querySelector("#display");
         this._historyCalcElement = document.querySelector("#history");
 
-
         // Var
         this._operation = [];
         this._lastNumber = '';
+        this._lastOperator = '';
+
+        // Audio
+        this._audio = new Audio('lib/sound/click.wav');
+        this._audioOnOff = false;
 
         this.initialize();
         this.initButtonsEvents();
+        this.initKeyboard();
     }
 
     initialize(){
         this.setLastNumberToDisplay();
+
+        let btnToggleAudio = document.querySelector('#btnToggleAudio');
+        btnToggleAudio.addEventListener('dblclick', e=>{ 
+            this.toggleAudio(); 
+        }); 
+
+    }
+
+    //Keyboard
+    initKeyboard(){
+
+        document.addEventListener('keyup', e =>{
+
+            this.playAudio();
+            
+            switch(e.key){
+                case 'Escape': 
+                    this.clearAll();
+                    break;
+                case 'Backspace': 
+                    this.clearEntry();
+                    break;
+                case '+': 
+                case '-': 
+                case '/': 
+                case '*': 
+                    this.addOperation(e.key);
+                    break;
+                case '%': 
+                    this.calculate(e.key);
+                    break;
+                case 'Enter': 
+                case '=': 
+                    this.calculate();
+                    break;
+                case '.': 
+                case ',': 
+                    this.addDot();
+                    break;
+    
+                case '0':
+                case '1':    
+                case '2':  
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    this.addOperation(parseInt(e.key));
+                    break;
+            }
+        });
+
+    }
+
+    // Audio keyboard
+    toggleAudio(){
+        this._audioOnOff = !this._audioOnOff;
+    }
+
+    playAudio(){
+        if(this._audioOnOff){
+            this._audio.currentTime = 0;
+            this._audio.play();
+        }
     }
 
     // Buttons Events
-
     initButtonsEvents(){
         let buttons = document.querySelectorAll(".btn");
     
         buttons.forEach((btn, index) => {
             this.addEventListenerAll(btn, 'click drag', e => {
+                this.playAudio();
                 this.executionBtn(btn.innerHTML); 
             });
         });
@@ -49,15 +121,17 @@ class CalculatorController{
             case '÷': 
                 this.addOperation('/');
                 break;
-            case 'X': 
+            case '*': 
                 this.addOperation('*');
                 break;
             case '%': 
                 this.addOperation('%');
                 break;
-
             case '=': 
                 this.calculate();
+                break;
+            case ',': 
+                this.addDot();
                 break;
 
 
@@ -80,7 +154,6 @@ class CalculatorController{
         }
     }
 
-    
     addOperation(value){
 
         if(isNaN(this.getLastOperation())){
@@ -88,10 +161,6 @@ class CalculatorController{
             if(this.isOperator(value)){
 
                 this.setLastOperation(value);
-
-            }else if(isNaN(value)){
-
-                // Outra coisa
 
             }else{
                 this.pushOperation(value);
@@ -107,16 +176,17 @@ class CalculatorController{
 
             }else {
                 let newValue = this.getLastOperation().toString() + value.toString();
-                this.setLastOperation(parseInt(newValue));
+                this.setLastOperation(newValue);
 
                 this.setLastNumberToDisplay();
             }
 
         }
 
+        console.log(this._operation);
+
         // Update history.
-        let operationNow = this._operation.toString();
-        this.historyCalcElement = operationNow.replaceAll(",", ' ');
+        this.updateHistory();
 
     }
 
@@ -124,11 +194,26 @@ class CalculatorController{
         
         // last = última operação digitada. 
         let last = '';
+        this._lastOperator = this.getLastItem(true);
+
+        if(this._operation.length < 3){
+            let firstItem = this._operation[0];
+            this._operation = [firstItem, this._lastOperator, this._lastNumber];
+        }
 
         if(this._operation.length > 3){
             last = this._operation.pop();
+
+            this._lastNumber = this.getResult();
+        }else if(this._operation.length == 3){
+            this._lastNumber = this.getLastItem(false);
         }
-        
+
+        let result = this.getResult();
+
+        // Update history
+        this.updateHistory();
+
         // calculate '%' 
         if(last == '%'){
 
@@ -147,19 +232,40 @@ class CalculatorController{
         this.setLastNumberToDisplay();
     }
 
-    setLastNumberToDisplay(){
-        let lastNumber; 
-
-        for(let i = this._operation.length - 1; i >= 0; i--){
-            if(!this.isOperator(this._operation[i])){
-                lastNumber = this._operation[i];
-                break;
-            }
+    getResult(){
+        try{
+            return eval(this._operation.join(""));
+        }catch(e){
+            setTimeout(()=>{
+                this.setError();
+            }, 1);
         }
+    }
+
+    setLastNumberToDisplay(){
+
+        let lastNumber = this.getLastItem(false); 
 
         if(!lastNumber) lastNumber = 0;
 
         this.displayCalcElement = lastNumber;
+    }
+
+    getLastItem(isOperator = true){
+        let lastItem; 
+
+        for(let i = this._operation.length - 1; i >= 0; i--){
+            if(this.isOperator(this._operation[i]) == isOperator){
+                lastItem = this._operation[i];
+                break;
+            }
+        }
+        
+        if(!lastItem){
+            lastItem = (isOperator) ? this._lastOperator : this._lastNumber;
+        }
+
+        return lastItem;
     }
 
     pushOperation(value){
@@ -170,18 +276,45 @@ class CalculatorController{
         }
     }
 
+    addDot(){
+        let lastOperation = this.getLastOperation();
+
+        if(typeof lastOperation === 'string' && lastOperation.split('').indexOf('.') > -1) return;
+
+        if(this.isOperator(lastOperation) || !lastOperation){
+            this.pushOperation('0.');   
+        }else{
+            this.setLastOperation(lastOperation.toString() + '.');
+        }
+
+        this.setLastNumberToDisplay();
+
+    }
+
     isOperator(value){
         return (['+', '-', '*', '%', '/'].indexOf(value) > -1);
     }
 
+    // Buttons specials
     clearAll(){
         this._operation = [];
+        this._lastNumber = '';
+        this._lastOperator = '';
+
+        this.updateHistory();
         this.setLastNumberToDisplay();
     }
 
     clearEntry(){
         this._operation.pop();
+        this.updateHistory();
         this.setLastNumberToDisplay();
+    }
+
+    // Update history
+    updateHistory(){
+        let operationNow = this._operation.toString();
+        this.historyCalcElement = operationNow.replaceAll(",", ' ');
     }
 
     // Error 
