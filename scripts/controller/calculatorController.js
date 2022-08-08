@@ -416,10 +416,11 @@ class CalculatorController{
     }
 
     set displayCalcElement(value){
-        if(value.toString().length > 11){
-            this.setError();
-            return false;
+        // Notação cientifica
+        if(value.toString().length > 11){ 
+            value = parseFloat(value.toString()).toExponential(2);
         }
+
         this._displayCalcElement.innerHTML = value;
     }
 
